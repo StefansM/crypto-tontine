@@ -13,5 +13,6 @@ setup(
     install_requires=[
         "click",
         "python-gnupg",
-    ]
+        "electrum @ git+https://github.com/spesmilo/electrum.git@4.1.5"
+    ],
 )

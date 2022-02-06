@@ -39,6 +39,55 @@ Input: Private keys and wallet ciphertext.
 
 Output: Wallet cleartext.
 
+# Usage
+
+## Generate a keypair
+
+Use GPG to generate a new keypair. The options `--no-default-keyring` and `--keyring $PWD/tontine.keys` instruct GPG to
+place the generated keys in a new keyring (`tontine.keys`), leaving the default keyring untouched. The key must not
+require a passphrase:
+
+```console
+$ gpg --no-default-keyring --keyring $PW/test.keys --full-generate-key
+...
+public and secret key created and signed.
+
+pub   rsa3072 2022-02-06 [SC]
+      C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF
+uid                      Alice
+sub   rsa3072 2022-02-06 [E]
+```
+
+The key fingerprint (`C7D3...`) can be used to unambiguously refer to this keypair. Optionally verify that the key is
+present in the keyring:
+
+```console
+$ gpg --no-default-keyring --keyring $PWD/test.keys --locate-key C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF
+pub   rsa3072 2022-02-06 [SC]
+      C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF
+uid           [ultimate] Alice
+sub   rsa3072 2022-02-06 [E]
+```
+
+## Export public key to file
+
+The tontine uses investor's public keys to sequentially encrypt a cryptocurrency wallet. Export a copy of your public
+key from your keyring into `key.pub`:
+
+```console
+$ gpg --no-default-keyring --keyring $PWD/test.keys --export --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key.pub
+```
+
+## Export secret key to file
+
+All investor's secret keys will be required to decrypt the wallet. Secret keys must be given to a third party that can
+be trusted to keep them secret and to distribute them to the remaining investors when the tontine expires. Export a
+copy of your secret key into `key`:
+
+```console
+$  gpg --no-default-keyring --keyring $PWD/test.keys --export-secret-keys --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key
+```
+
 ## Return addresses for testnet coins
 
 * Dogecoin: `nbMFaHF9pjNoohS4fD1jefKBgDnETK9uPu`

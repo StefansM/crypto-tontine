@@ -1,48 +1,44 @@
 # Crypto-Tontine
 
-*Status*: Just a design document for now.
+## Usage
 
-## Overview
+Set up a new tontine:
 
-* Spin up a new wallet.
-* Generate a receiving address.
-* Receive public keys from investors.
-* Receive money from investors.
-* Encrypt receiving addresses private key with all public keys.
-* Send ciphertext of address private key to all investors.
-* Wipe self.
+Assuming that you have a dogecoin daemon up and running, and `dogecoin-cli` is in your `$PATH`:
 
-## Setup flow
+```console
+$ tontine setup doge address
+Send coins to: nkbeuJ1MboTo7RxDFiQrTTyth8BN9HtTWF
+```
 
-1. Generate new wallet for receiving BTC from investors.
-2. Generate address for each investor.
-3. Investors send BTC to address.
-4. Receive *public* GPG keys from investors.
-   1. Stretch: receive from BTC transaction.
-5. Tontine polls receiving addresses until all transactions are confirmed.
-6. Sequentially encrypt wallet with public keys.
-   1. Generate metadata file containing order of encryption.
-7. Distribute ciphertext of wallet to all investors.
+Monitor the wallet using the `check` subcommand:
 
-Input: Public keys.
+```console
+$ tontine setup doge --doge-cli ~/Downloads/dogecoin-1.14.5/bin/dogecoin-cli check
+Total spendable: 99.99548
 
-Output: Ciphertext of wallet.
+Individual balances:
+nfQcBPhfqZVdyGduHTNGETVV2MPD4m5bAR	(spendable)	1.0
+ndtNjWxVxYSirQ1GXx1M9scdKLH3js4xSi	(spendable)	97.99548
+nfQcBPhfqZVdyGduHTNGETVV2MPD4m5bAR	(spendable)	1.0
+```
 
-## Exercise flow
+The `--require X` option can be passed to `check` and will cause the command to fail with a non-zero exit status if the
+spendable balance is less than `X`. This option can be used to script a complete `setup` workflow.
 
-1. Receive the private keys of investors.
-2. Receive the ciphertext of the wallet, includes in cleartext the order of encryption.
-3. Sequentially decrypts the wallet.
-4. Stretch: distribute funds to surviving investor.
+Encrypt wallet using all investors' public keys:
 
-Input: Private keys and wallet ciphertext.
+```console
+$ tontine setup doge encrypt *.pub
+-----BEGIN PGP MESSAGE-----
 
-Output: Wallet cleartext.
-
-# Usage
+hQGMA8rDB4oQMELeAQv/cbJlEichLMU/RGkeryHmQUL15utAyRZwySRSodPvvRQ4
+...
+```
 
 ## Generate a keypair
 
+The public keys used above can geenerated using `gpg`. Investors must generate both a public and private key.
 Use GPG to generate a new keypair. The option `--homedir` instructs GPG to place keyrings and data files inside the
 new home directory, leaving the default keyring untouched. The key must not require a passphrase:
 
@@ -86,6 +82,46 @@ copy of your secret key into `key`:
 ```console
 $  gpg --homedir $PWD/test_keys --export-secret-keys --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key
 ```
+
+## Design
+
+* Spin up a new wallet.
+* Generate a receiving address.
+* Receive public keys from investors.
+* Receive money from investors.
+* Encrypt receiving addresses private key with all public keys.
+* Send ciphertext of address private key to all investors.
+* Wipe self.
+
+## Setup flow
+
+1. Generate new wallet for receiving BTC from investors.
+2. Generate address for each investor.
+3. Investors send BTC to address.
+4. Receive *public* GPG keys from investors.
+   1. Stretch: receive from BTC transaction.
+5. Tontine polls receiving addresses until all transactions are confirmed.
+6. Sequentially encrypt wallet with public keys.
+   1. Generate metadata file containing order of encryption.
+7. Distribute ciphertext of wallet to all investors.
+
+Input: Public keys.
+
+Output: Ciphertext of wallet.
+
+## Exercise flow
+
+1. Receive the private keys of investors.
+2. Receive the ciphertext of the wallet, includes in cleartext the order of encryption.
+3. Sequentially decrypts the wallet.
+4. Stretch: distribute funds to surviving investor.
+
+Input: Private keys and wallet ciphertext.
+
+Output: Wallet cleartext.
+
+# Usage
+
 
 ## Return addresses for testnet coins
 

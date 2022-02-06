@@ -43,12 +43,11 @@ Output: Wallet cleartext.
 
 ## Generate a keypair
 
-Use GPG to generate a new keypair. The options `--no-default-keyring` and `--keyring $PWD/tontine.keys` instruct GPG to
-place the generated keys in a new keyring (`tontine.keys`), leaving the default keyring untouched. The key must not
-require a passphrase:
+Use GPG to generate a new keypair. The option `--homedir` instructs GPG to place keyrings and data files inside the
+new home directory, leaving the default keyring untouched. The key must not require a passphrase:
 
 ```console
-$ gpg --no-default-keyring --keyring $PW/test.keys --full-generate-key
+$ gpg --homedir $PWD/test_keys --full-generate-key
 ...
 public and secret key created and signed.
 
@@ -62,7 +61,7 @@ The key fingerprint (`C7D3...`) can be used to unambiguously refer to this keypa
 present in the keyring:
 
 ```console
-$ gpg --no-default-keyring --keyring $PWD/test.keys --locate-key C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF
+$ gpg --homedir $PWD/test_keys --locate-key C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF
 pub   rsa3072 2022-02-06 [SC]
       C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF
 uid           [ultimate] Alice
@@ -75,7 +74,7 @@ The tontine uses investor's public keys to sequentially encrypt a cryptocurrency
 key from your keyring into `key.pub`:
 
 ```console
-$ gpg --no-default-keyring --keyring $PWD/test.keys --export --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key.pub
+$ gpg --homedir $PWD/test_keys --export --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key.pub
 ```
 
 ## Export secret key to file
@@ -85,7 +84,7 @@ be trusted to keep them secret and to distribute them to the remaining investors
 copy of your secret key into `key`:
 
 ```console
-$  gpg --no-default-keyring --keyring $PWD/test.keys --export-secret-keys --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key
+$  gpg --homedir $PWD/test_keys --export-secret-keys --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key
 ```
 
 ## Return addresses for testnet coins

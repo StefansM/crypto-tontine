@@ -38,9 +38,9 @@ hQGMA8rDB4oQMELeAQv/cbJlEichLMU/RGkeryHmQUL15utAyRZwySRSodPvvRQ4
 
 ## Generate a keypair
 
-The public keys used above can geenerated using `gpg`. Investors must generate both a public and private key.
-Use GPG to generate a new keypair. The option `--homedir` instructs GPG to place keyrings and data files inside the
-new home directory, leaving the default keyring untouched. The key must not require a passphrase:
+Investors must generate both a public and private key. Use GPG to generate a new keypair. The option `--homedir`
+instructs GPG to place keyrings and data files inside the new home directory, leaving the default keyring untouched.
+The key must not require a passphrase:
 
 ```console
 $ gpg --homedir $PWD/test_keys --full-generate-key
@@ -64,7 +64,7 @@ uid           [ultimate] Alice
 sub   rsa3072 2022-02-06 [E]
 ```
 
-## Export public key to file
+### Export public key to file
 
 The tontine uses investor's public keys to sequentially encrypt a cryptocurrency wallet. Export a copy of your public
 key from your keyring into `key.pub`:
@@ -73,7 +73,7 @@ key from your keyring into `key.pub`:
 $ gpg --homedir $PWD/test_keys --export --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key.pub
 ```
 
-## Export secret key to file
+### Export secret key to file
 
 All investor's secret keys will be required to decrypt the wallet. Secret keys must be given to a third party that can
 be trusted to keep them secret and to distribute them to the remaining investors when the tontine expires. Export a

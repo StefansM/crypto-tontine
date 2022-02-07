@@ -2,18 +2,12 @@ import dataclasses
 import json
 import pathlib
 import subprocess
-from typing import Any, List, TextIO
+from typing import Any, List
+
+from tontine.wallet.base import Balance, Wallet
 
 
-@dataclasses.dataclass
-class Balance:
-    address: str
-    amount: float
-    spendable: bool
-    txid: str
-
-
-class DogeWallet:
+class DogeWallet(Wallet):
     def __init__(self, testnet: bool = True, doge_cli: str = "dogecoin-cli"):
         self.testnet = testnet
         self._doge_cli = doge_cli

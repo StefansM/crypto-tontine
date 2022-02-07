@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import tontine.wallet.base
 import tontine.wallet.doge
 
 
@@ -41,7 +42,7 @@ def test_listunspent_parsed_correctly(noexec_wallet: tontine.wallet.doge.DogeWal
 
     noexec_wallet._exec.return_value = response
     expected = [
-        tontine.wallet.doge.Balance(
+        tontine.wallet.base.Balance(
             address="niJE2pgf9wb337gYCk4xFnBy9X5kSh8Qdi",
             amount=100.0,
             spendable=True,

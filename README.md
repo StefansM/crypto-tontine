@@ -7,14 +7,14 @@ Set up a new tontine:
 Assuming that you have a dogecoin daemon up and running, and `dogecoin-cli` is in your `$PATH`:
 
 ```console
-$ tontine setup doge address
+$ tontine doge setup address
 Send coins to: nkbeuJ1MboTo7RxDFiQrTTyth8BN9HtTWF
 ```
 
 Monitor the wallet using the `check` subcommand:
 
 ```console
-$ tontine setup doge --doge-cli ~/Downloads/dogecoin-1.14.5/bin/dogecoin-cli check
+$ tontine doge setup --doge-cli ~/Downloads/dogecoin-1.14.5/bin/dogecoin-cli check
 Total spendable: 99.99548
 
 Individual balances:
@@ -29,7 +29,7 @@ spendable balance is less than `X`. This option can be used to script a complete
 Encrypt wallet using all investors' public keys:
 
 ```console
-$ tontine setup doge encrypt *.pub
+$ tontine doge setup encrypt *.pub
 -----BEGIN PGP MESSAGE-----
 
 hQGMA8rDB4oQMELeAQv/cbJlEichLMU/RGkeryHmQUL15utAyRZwySRSodPvvRQ4

@@ -32,7 +32,7 @@ def main(ctx):
     ctx.ensure_object(AppContext)
 
 
-@main.group()
+@click.group()
 def setup():
     """
     Prepare funds and distribute a tontine.
@@ -49,7 +49,7 @@ def setup():
     pass
 
 
-@setup.group()
+@main.group()
 @click.pass_context
 @click.option("--testnet/--no-testnet", default=True,
               help="Choose testnet or mainnet.")
@@ -63,7 +63,7 @@ def doge(ctx, **kwargs):
     ctx.obj.wallet = wallet
 
 
-@doge.command()
+@setup.command()
 @click.pass_context
 def address(ctx):
     """
@@ -72,7 +72,7 @@ def address(ctx):
     print(f"Send coins to: {ctx.obj.wallet.receiving_address()}")
 
 
-@doge.command()
+@setup.command()
 @click.pass_context
 @click.option("--require", "-r", type=float,
               help="Return a non-zero exit status if there are not at least this many coins available to spend.")
@@ -100,14 +100,14 @@ def check(ctx, require: Optional[float]):
             sys.exit(1)
 
 
-@doge.command()
+@setup.command()
 @click.pass_context
 @click.argument("public_keys", type=click.Path(exists=True, dir_okay=False), nargs=-1)
 @click.option("--gpg", type=str, default="gpg",
               help="Optional path to gpg executable.")
 def encrypt(ctx, public_keys: Tuple[str], gpg: str):
     """
-    Encrypt wallet with all public keys, and write the results to standard output.
+    Encrypt wallet and write the results to standard output.
     """
     if len(public_keys) < 2:
         raise click.ClickException("At least 2 public keys required.")
@@ -131,6 +131,30 @@ def encrypt(ctx, public_keys: Tuple[str], gpg: str):
 
         ciphertext.seek(0)
         print(ciphertext.read())
+
+
+# The command below the two main phases "setup" and "exercise" have wallet-specific implementations but share a common
+# interface. The interface we expose looks like this:
+#
+# tontine [wallet] [main command] [subcommand]
+#
+# For example:
+#
+#    * tontine doge setup address
+#    * tontine electrum setup check
+#
+# This is implemented by defining wallet-specific subcommand ("doge" or "electrum" in the examples above) that handle
+# setting up specific wallets. Subcommands are then added to each wallet command that only use the Wallet interface, so
+# can be applied to any Wallet.
+#
+# Because commands can belong to multiple groups in this model, we need to use a verbose Click API and explicitly
+# add commands to groups, rather than using the `@x.command` decorator.
+wallet_cmds = [doge]
+wallet_subcmds = [setup]
+
+for wallet_cmd in wallet_cmds:
+    for wallet_subcmd in wallet_subcmds:
+        wallet_cmd.add_command(wallet_subcmd)
 
 
 if __name__ == "__main__":

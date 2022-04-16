@@ -118,7 +118,7 @@ class Keyring:
         Args:
             file_to_encrypt: Cleartext file to encrypt.
             key_fingerprints: List of public key fingerprints.
-            outfile: Ciphertext file location..
+            outfile: Ciphertext file location.
         """
         if len(key_fingerprints) <= 1:
             raise ValueError(f"At least two keys must be used for encryption. Received {key_fingerprints}.")

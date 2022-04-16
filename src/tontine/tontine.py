@@ -164,36 +164,34 @@ def encrypt(ctx, public_keys: Tuple[pathlib.Path], gpg: str):
 
 @exercise.command()
 @click.pass_context
-@click.argument("wallet", type=click.Path(dir_okay=False, path_type=pathlib.Path))
 @click.argument("ciphertext", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path))
 @click.argument("private_keys", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path), nargs=-1)
 @click.option("--gpg", type=str, default="gpg",
               help="Optional path to gpg executable.")
-def decrypt(ctx, wallet: pathlib.Path, ciphertext: pathlib.Path, private_keys: Tuple[pathlib.Path], gpg: str):
+def decrypt(ctx, ciphertext: pathlib.Path, private_keys: Tuple[pathlib.Path], gpg: str):
     """
     Chain-decrypt a wallet using the private keys of each investor.
 
     \b
-    WALLET: Restore the cleartext wallet to this location.
     CIPHERTEXT: File containing the encrypted wallet.
     PRIVATE_KEYS: Private key files (minimum 2).
     """
     if len(private_keys) < 2:
         raise click.ClickException("At least 2 public keys required.")
 
-    with tempfile.TemporaryDirectory() as keyring:
+    with tempfile.TemporaryDirectory() as keyring, \
+            tempfile.NamedTemporaryFile("w") as cleartext_file:
         keyring_path = pathlib.Path(keyring)
 
         keyring = tontine.keys.Keyring(keyring_path, gpg)
         for key in private_keys:
             keyring.import_key(key)
 
-        cleartext = keyring.chain_decrypt(ciphertext)
+        cleartext = keyring.chain_decrypt(ciphertext).strip()
+        cleartext_file.write(cleartext)
+        cleartext_file.flush()
 
-    with wallet.open("w") as wallet_out:
-        wallet_out.write(cleartext)
-
-    ctx.obj.wallet.load_wallet(wallet)
+        ctx.obj.wallet.load_wallet(pathlib.Path(cleartext_file.name))
 
 
 # The commands below the two main phases "setup" and "exercise" have wallet-specific implementations but share a common

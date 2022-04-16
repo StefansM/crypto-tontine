@@ -9,7 +9,6 @@ class Balance:
     address: str
     amount: float
     spendable: bool
-    txid: str
 
 
 class Wallet(abc.ABC):

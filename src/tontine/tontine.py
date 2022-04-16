@@ -8,6 +8,7 @@ import click
 
 import tontine.keys
 import tontine.wallet.doge
+import tontine.wallet.electrum
 
 
 @dataclasses.dataclass
@@ -49,6 +50,16 @@ def setup():
     pass
 
 
+@click.group()
+def exercise():
+    """
+    Exercise (cash out) a tontine.
+
+    Chain decrypt the tontine using the private keys of all investors.
+    """
+    pass
+
+
 @main.group()
 @click.pass_context
 @click.option("--testnet/--no-testnet", default=True,
@@ -60,6 +71,24 @@ def doge(ctx, **kwargs):
     Use DogeCoin as the cryptocurrency wallet.
     """
     wallet = tontine.wallet.doge.DogeWallet(**kwargs)
+    ctx.obj.wallet = wallet
+
+
+@main.group()
+@click.pass_context
+@click.option("--testnet/--no-testnet", default=True,
+              help="Choose testnet or mainnet.")
+@click.option("--electrum-cli", type=str, default="electrum",
+              help="electrum executable lcoation, inc case electrum is not on $PATH.")
+@click.argument("wallet_path", type=click.Path(path_type=pathlib.Path))
+def electrum(ctx, **kwargs):
+    """
+    Use Electrum as the cryptocurrency wallet.
+
+    \b
+    WALLET_PATH: Path to the electrum wallet.
+    """
+    wallet = tontine.wallet.electrum.ElectrumWallet(**kwargs)
     ctx.obj.wallet = wallet
 
 
@@ -102,10 +131,10 @@ def check(ctx, require: Optional[float]):
 
 @setup.command()
 @click.pass_context
-@click.argument("public_keys", type=click.Path(exists=True, dir_okay=False), nargs=-1)
+@click.argument("public_keys", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path), nargs=-1)
 @click.option("--gpg", type=str, default="gpg",
               help="Optional path to gpg executable.")
-def encrypt(ctx, public_keys: Tuple[str], gpg: str):
+def encrypt(ctx, public_keys: Tuple[pathlib.Path], gpg: str):
     """
     Encrypt wallet and write the results to standard output.
     """
@@ -122,7 +151,7 @@ def encrypt(ctx, public_keys: Tuple[str], gpg: str):
 
         keyring = tontine.keys.Keyring(keyring_path, gpg)
         for key in public_keys:
-            keyring.import_key(pathlib.Path(key))
+            keyring.import_key(key)
 
         key_fingerprints = [k.fingerprint for k in keyring.list_public_keys()]
 
@@ -133,7 +162,41 @@ def encrypt(ctx, public_keys: Tuple[str], gpg: str):
         print(ciphertext.read())
 
 
-# The command below the two main phases "setup" and "exercise" have wallet-specific implementations but share a common
+@exercise.command()
+@click.pass_context
+@click.argument("wallet", type=click.Path(dir_okay=False, path_type=pathlib.Path))
+@click.argument("ciphertext", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path))
+@click.argument("private_keys", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path), nargs=-1)
+@click.option("--gpg", type=str, default="gpg",
+              help="Optional path to gpg executable.")
+def decrypt(ctx, wallet: pathlib.Path, ciphertext: pathlib.Path, private_keys: Tuple[pathlib.Path], gpg: str):
+    """
+    Chain-decrypt a wallet using the private keys of each investor.
+
+    \b
+    WALLET: Restore the cleartext wallet to this location.
+    CIPHERTEXT: File containing the encrypted wallet.
+    PRIVATE_KEYS: Private key files (minimum 2).
+    """
+    if len(private_keys) < 2:
+        raise click.ClickException("At least 2 public keys required.")
+
+    with tempfile.TemporaryDirectory() as keyring:
+        keyring_path = pathlib.Path(keyring)
+
+        keyring = tontine.keys.Keyring(keyring_path, gpg)
+        for key in private_keys:
+            keyring.import_key(key)
+
+        cleartext = keyring.chain_decrypt(ciphertext)
+
+    with wallet.open("w") as wallet_out:
+        wallet_out.write(cleartext)
+
+    ctx.obj.wallet.load_wallet(wallet)
+
+
+# The commands below the two main phases "setup" and "exercise" have wallet-specific implementations but share a common
 # interface. The interface we expose looks like this:
 #
 # tontine [wallet] [main command] [subcommand]
@@ -149,8 +212,8 @@ def encrypt(ctx, public_keys: Tuple[str], gpg: str):
 #
 # Because commands can belong to multiple groups in this model, we need to use a verbose Click API and explicitly
 # add commands to groups, rather than using the `@x.command` decorator.
-wallet_cmds = [doge]
-wallet_subcmds = [setup]
+wallet_cmds = [doge, electrum]
+wallet_subcmds = [setup, exercise]
 
 for wallet_cmd in wallet_cmds:
     for wallet_subcmd in wallet_subcmds:

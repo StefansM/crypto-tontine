@@ -46,7 +46,6 @@ def test_listunspent_parsed_correctly(noexec_wallet: tontine.wallet.doge.DogeWal
             address="niJE2pgf9wb337gYCk4xFnBy9X5kSh8Qdi",
             amount=100.0,
             spendable=True,
-            txid="3d7612a83a603c3f407735ca8bba8aec9b94766b199bd7e85ff2d263b4db2dd5",
         )
     ]
     assert noexec_wallet.list_unspent() == expected

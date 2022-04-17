@@ -94,6 +94,105 @@ copy of your secret key into `key`:
 $  gpg --export-secret-keys --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key
 ```
 
+## Building
+
+Build the Python package using the Python [build](https://pypi.org/project/build/) package:
+
+```console
+$ python -mbuild
+```
+
+To build the docker image, which includes the dogecoin and electrum clients:
+
+```console
+$ ./scripts/get-docker-dependencies
+$ docker build -t "tontine:$(sed 's/+/-/g' version.txt)" --build-arg "VERSION=$(<version.txt)" .
+```
+
+## Running in Docker
+
+The easiest way to get a clean install that we can be reasonable sure won't leak secrets is to use Docker. Assuming
+you've built a docker image using the commands in the previous section, start a session like this:
+
+```console
+$ docker run -it --rm \
+    -v /mnt/storage/dogecoin:/mnt/doge \
+    -v /mnt/storage/investor_keys:/mnt/keys \
+    tontine:0.1.0 /bin/bash
+```
+
+The second `-v` option is used here to mount the investor's public or private keys into the docker container. The first
+`-v` option is used to pass the dogecoin `datadir` into the container, which lets us use the script `bootstrap-doge` to
+bootstrap the dogecoin blockchain from the host machine.
+
+```console
+tontine@27259b953cb3:/$ bootstrap-doge /mnt/doge/
+Copying files from source directory.
+'/mnt/doge/' -> '/home/tontine/.dogecoin'
+...
+Removing existing wallet files for a fresh wallet.
+removed '/home/tontine/.dogecoin/wallet.dat'
+removed '/home/tontine/.dogecoin/testnet3/wallet.dat'
+```
+
+Next, start the dogecoin and electrum daemons:
+
+```console
+tontine@27259b953cb3:/$ dogecoind -testnet -daemon
+Dogecoin server starting
+tontine@27259b953cb3:/$ electrum --testnet daemon -d
+starting daemon (PID 39)
+```
+
+If you're using an electrum wallet, create one and load it into the daemon:
+
+```console
+tontine@27259b953cb3:/$ electrum --testnet -w $HOME/electrum_wallet create
+{
+    "msg": "Please keep your seed in a safe place; if you lose it, you will not be able to restore your wallet.",
+    "path": "/home/tontine/electrum_wallet",
+    "seed": "my super secret seed"
+}
+tontine@27259b953cb3:/$ electrum --testnet -w $HOME/electrum_wallet load_wallet
+true
+```
+
+If you're using dogecoin, verify that the daemon is running and the wallet is empty:
+
+```console
+tontine@27259b953cb3:/$ dogecoin-cli -testnet listunspent
+[
+]
+```
+
+Now, you can use the `tontine` command to set up a new tontine:
+
+```console
+tontine@27259b953cb3:/$ tontine doge setup address
+Send coins to: nrQt5RkkHeyG6Y9pVMPNcSFotuafXYDwmN
+tontine@27259b953cb3:/$ tontine doge setup check
+Total spendable: 10.0
+
+Individual balances:
+nrQt5RkkHeyG6Y9pVMPNcSFotuafXYDwmN	(spendable)	10.0
+tontine@ad7bab0566f5:/$ tontine doge setup \
+    encrypt /mnt/keys/{alice,bob}.pub \
+    > /mnt/keys/encrypted_wallet.asc
+```
+
+The encrypted wallet is now available at the host path `/mnt/storage/investor_keys/encrypted_wallet.asc`.
+
+To decrypt, exercise the tontine:
+
+```console
+tontine@ad7bab0566f5:/$ tontine doge \
+    exercise /mnt/keys/encrypted_wallet.asc \
+    /mnt/keys/{alice,bob} \
+    > /mnt/keys/decrypted_wallet
+```
+
+The decrypted wallet is now available at the host path `/mnt/storage/investor_keys/decrypted_wallet`.
+
 ## Return addresses for testnet coins
 
 * Dogecoin: `nbMFaHF9pjNoohS4fD1jefKBgDnETK9uPu`

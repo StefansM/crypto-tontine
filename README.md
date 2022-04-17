@@ -2,8 +2,6 @@
 
 ## Usage
 
-Set up a new tontine:
-
 Assuming that you have a dogecoin daemon up and running, and `dogecoin-cli` is in your `$PATH`:
 
 ```console
@@ -36,14 +34,27 @@ hQGMA8rDB4oQMELeAQv/cbJlEichLMU/RGkeryHmQUL15utAyRZwySRSodPvvRQ4
 ...
 ```
 
-## Generate a keypair
-
-Investors must generate both a public and private key. Use GPG to generate a new keypair. The option `--homedir`
-instructs GPG to place keyrings and data files inside the new home directory, leaving the default keyring untouched.
-The key must not require a passphrase:
+To cash out (exercise) the tontine, use the `exercise` command, passing the ciphertext of the wallet and the secret keys
+of each investor:
 
 ```console
-$ gpg --homedir $PWD/test_keys --full-generate-key
+$ tontine doge exercise encrypted-wallet.asc key1 key2
+```
+
+To use an electrum wallet, replace `doge` with `electrum` in the commands above, noting that `electrum` requires a
+wallet file to be passed. Commands become, for example:
+
+```cnosole
+$ tontine electrum /path/to/wallet setup encrypt *.pub
+```
+
+## Generating a keypair
+
+Investors must generate both a public and private key. Use GPG to generate a new keypair. The key must not require a
+passphrase:
+
+```console
+$ gpg --full-generate-key
 ...
 public and secret key created and signed.
 
@@ -57,7 +68,7 @@ The key fingerprint (`C7D3...`) can be used to unambiguously refer to this keypa
 present in the keyring:
 
 ```console
-$ gpg --homedir $PWD/test_keys --locate-key C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF
+$ gpg --locate-key C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF
 pub   rsa3072 2022-02-06 [SC]
       C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF
 uid           [ultimate] Alice
@@ -70,7 +81,7 @@ The tontine uses investor's public keys to sequentially encrypt a cryptocurrency
 key from your keyring into `key.pub`:
 
 ```console
-$ gpg --homedir $PWD/test_keys --export --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key.pub
+$ gpg --export --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key.pub
 ```
 
 ### Export secret key to file
@@ -80,48 +91,8 @@ be trusted to keep them secret and to distribute them to the remaining investors
 copy of your secret key into `key`:
 
 ```console
-$  gpg --homedir $PWD/test_keys --export-secret-keys --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key
+$  gpg --export-secret-keys --armor C7D3805DEDD0F631EF37B87A8937FB1D402EC5FF > key
 ```
-
-## Design
-
-* Spin up a new wallet.
-* Generate a receiving address.
-* Receive public keys from investors.
-* Receive money from investors.
-* Encrypt receiving addresses private key with all public keys.
-* Send ciphertext of address private key to all investors.
-* Wipe self.
-
-## Setup flow
-
-1. Generate new wallet for receiving BTC from investors.
-2. Generate address for each investor.
-3. Investors send BTC to address.
-4. Receive *public* GPG keys from investors.
-   1. Stretch: receive from BTC transaction.
-5. Tontine polls receiving addresses until all transactions are confirmed.
-6. Sequentially encrypt wallet with public keys.
-   1. Generate metadata file containing order of encryption.
-7. Distribute ciphertext of wallet to all investors.
-
-Input: Public keys.
-
-Output: Ciphertext of wallet.
-
-## Exercise flow
-
-1. Receive the private keys of investors.
-2. Receive the ciphertext of the wallet, includes in cleartext the order of encryption.
-3. Sequentially decrypts the wallet.
-4. Stretch: distribute funds to surviving investor.
-
-Input: Private keys and wallet ciphertext.
-
-Output: Wallet cleartext.
-
-# Usage
-
 
 ## Return addresses for testnet coins
 

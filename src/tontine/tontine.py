@@ -50,16 +50,6 @@ def setup():
     pass
 
 
-@click.group()
-def exercise():
-    """
-    Exercise (cash out) a tontine.
-
-    Chain decrypt the tontine using the private keys of all investors.
-    """
-    pass
-
-
 @main.group()
 @click.pass_context
 @click.option("--testnet/--no-testnet", default=True,
@@ -162,13 +152,13 @@ def encrypt(ctx, public_keys: Tuple[pathlib.Path], gpg: str):
         print(ciphertext.read())
 
 
-@exercise.command()
+@click.command()
 @click.pass_context
 @click.argument("ciphertext", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path))
 @click.argument("private_keys", type=click.Path(exists=True, dir_okay=False, path_type=pathlib.Path), nargs=-1)
 @click.option("--gpg", type=str, default="gpg",
               help="Optional path to gpg executable.")
-def decrypt(ctx, ciphertext: pathlib.Path, private_keys: Tuple[pathlib.Path], gpg: str):
+def exercise(ctx, ciphertext: pathlib.Path, private_keys: Tuple[pathlib.Path], gpg: str):
     """
     Chain-decrypt a wallet using the private keys of each investor.
 
@@ -179,8 +169,7 @@ def decrypt(ctx, ciphertext: pathlib.Path, private_keys: Tuple[pathlib.Path], gp
     if len(private_keys) < 2:
         raise click.ClickException("At least 2 public keys required.")
 
-    with tempfile.TemporaryDirectory() as keyring, \
-            tempfile.NamedTemporaryFile("w") as cleartext_file:
+    with tempfile.TemporaryDirectory() as keyring:
         keyring_path = pathlib.Path(keyring)
 
         keyring = tontine.keys.Keyring(keyring_path, gpg)
@@ -188,10 +177,7 @@ def decrypt(ctx, ciphertext: pathlib.Path, private_keys: Tuple[pathlib.Path], gp
             keyring.import_key(key)
 
         cleartext = keyring.chain_decrypt(ciphertext).strip()
-        cleartext_file.write(cleartext)
-        cleartext_file.flush()
-
-        ctx.obj.wallet.load_wallet(pathlib.Path(cleartext_file.name))
+        sys.stdout.write(cleartext)
 
 
 # The commands below the two main phases "setup" and "exercise" have wallet-specific implementations but share a common

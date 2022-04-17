@@ -12,8 +12,6 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         "click",
-        #"electrum @ git+https://github.com/spesmilo/electrum.git@4.1.5",
-        #"cryptography"
     ],
     extras_require={
         "test": [

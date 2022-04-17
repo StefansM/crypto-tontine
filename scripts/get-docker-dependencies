@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+export ELECTRUM_VER=4.2.1
+export ELECTRUM_IMAGE="electrum-${ELECTRUM_VER}-x86_64.AppImage"
+if [[ ! -e "${ELECTRUM_IMAGE}" ]]; then
+    wget "https://download.electrum.org/${ELECTRUM_VER}/${ELECTRUM_IMAGE}"
+    chmod +x "${ELECTRUM_IMAGE}"
+    ./"${ELECTRUM_IMAGE}" --appimage-extract
+    mv squashfs-root "electrum-${ELECTRUM_VER}"
+fi
+
+export DOGECOIN_VER=1.14.5
+export DOGECOIN_TGZ="dogecoin-${DOGECOIN_VER}-x86_64-linux-gnu.tar.gz"
+if [[ ! -e "${DOGECOIN_TGZ}" ]]; then
+    wget "https://github.com/dogecoin/dogecoin/releases/download/v${DOGECOIN_VER}/${DOGECOIN_TGZ}"
+    tar xvf "$DOGECOIN_TGZ"
+fi

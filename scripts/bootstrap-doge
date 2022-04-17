@@ -1,0 +1,25 @@
+#!/bin/bash
+
+dogedb="$1"
+
+if [[ -z "$dogedb" ]]; then
+    cat >&2 <<EOF
+Usage: $0 /path/to/mounted/dogedb"
+
+Initialize dogecoin database from an external database.
+Avoids having to redownload the entire blockchain.
+EOF
+exit 1
+fi
+
+if [[ "$(whoami)" != "tontine" ]]; then
+    echo "Expected user to be 'tontine'. Are you running in a docker container?" >&2
+    exit 1
+fi
+
+echo "Copying files from source directory."
+cp -rv "$dogedb" "$HOME/.dogecoin"
+
+echo "Removing existing wallet files for a fresh wallet."
+rm -fv "$HOME/.dogecoin/wallet.dat"
+rm -fv "$HOME/.dogecoin/testnet3/wallet.dat"

@@ -111,7 +111,7 @@ $ docker build -t "tontine:$(sed 's/+/-/g' version.txt)" --build-arg "VERSION=$(
 
 ## Running in Docker
 
-The easiest way to get a clean install that we can be reasonable sure won't leak secrets is to use Docker. Assuming
+The easiest way to get a clean install that we can be reasonably sure won't leak secrets is to use Docker. Assuming
 you've built a docker image using the commands in the previous section, start a session like this:
 
 ```console
